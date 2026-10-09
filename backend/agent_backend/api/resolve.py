@@ -10,35 +10,11 @@ from agent_backend import config
 from agent_backend.agent.core import build_agent
 from agent_backend.agent.deps import AgentDeps
 from agent_backend.agent.history import last_turns
-from agent_backend import verification
-from agent_backend.api.models import (
-    ResolveRequest,
-    ResolveResponse,
-    VerifyRequest,
-    VerifyResponse,
-)
-from agent_backend.dependencies import (
-    get_conversation_repository,
-    get_session_verifier,
-    get_usage_limiter,
-)
-from agent_backend.limits import MESSAGES
+from agent_backend.api.models import ResolveRequest, ResolveResponse
+from agent_backend.dependencies import get_conversation_repository, get_guard
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-
-def refused(reason: str) -> ResolveResponse:
-    return ResolveResponse(reply=MESSAGES[reason], limited=reason)
-
-
-def caller_ip(request: Request) -> str:
-    # Set by the proxy in front of this service (nginx, or the Next.js
-    # server calling on a visitor's behalf). This service must not be
-    # reachable any other way, or the header could be forged.
-    return request.headers.get("x-real-ip") or (
-        request.client.host if request.client else "unknown"
-    )
 
 
 @router.post("/resolve")
@@ -46,36 +22,22 @@ async def resolve(
     request: ResolveRequest,
     http_request: Request,
     repo=Depends(get_conversation_repository),
-    limiter=Depends(get_usage_limiter),
-    verifier=Depends(get_session_verifier),
+    guard=Depends(get_guard),
 ):
     if len(request.query) > config.MAX_QUERY_CHARS:
-        return refused("length")
-
-    # Before anything is counted or spent: has this session shown there is
-    # a person behind it? Like the limits below, an error here refuses.
-    if verification.required():
-        try:
-            verified = await verifier.is_verified(request.session_id)
-        except Exception:
-            logger.exception("verification lookup failed")
-            return refused("unavailable")
-        if not verified:
-            response = refused("verification")
-            response.site_key = config.TURNSTILE_SITE_KEY
-            return response
-
-    # If the limits can't be checked, nothing is let through: an outage
-    # must not turn into an unmetered service.
-    try:
-        event_id, reason = await limiter.reserve(
-            request.session_id, caller_ip(http_request)
+        return ResolveResponse(
+            reply=(
+                "That message is too long for this demo. "
+                f"Please keep it under {config.MAX_QUERY_CHARS} characters."
+            ),
+            limited="length",
         )
-    except Exception:
-        logger.exception("usage limit check failed")
-        return refused("unavailable")
-    if reason:
-        return refused(reason)
+
+    # Before anything is spent: is this question answered at all? See
+    # guard.py.
+    admission = await guard.admit(request, http_request)
+    if isinstance(admission, ResolveResponse):
+        return admission
 
     stored_history = await repo.load(request.session_id)
     message_history = (
@@ -112,7 +74,7 @@ async def resolve(
         # than allowed. Not the caller's fault either way.
         logger.exception("agent run failed")
     finally:
-        await limiter.record(event_id, usage.input_tokens, usage.output_tokens)
+        await admission.record(usage.input_tokens, usage.output_tokens)
 
     if result is None:
         return ResolveResponse(reply=failure)
@@ -123,19 +85,3 @@ async def resolve(
         return ResolveResponse(tool=deps.resolved["tool"], args=deps.resolved["args"])
 
     return ResolveResponse(reply=result.output)
-
-
-@router.post("/verify")
-async def verify(
-    request: VerifyRequest,
-    http_request: Request,
-    verifier=Depends(get_session_verifier),
-) -> VerifyResponse:
-    """Marks a session as verified, given a valid Turnstile token."""
-    if not verification.required():
-        return VerifyResponse(verified=True)
-    return VerifyResponse(
-        verified=await verifier.verify(
-            request.session_id, request.token, caller_ip(http_request)
-        )
-    )
