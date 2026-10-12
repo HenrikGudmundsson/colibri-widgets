@@ -79,7 +79,9 @@ uv run python -m agent_backend.trace_report 3f9a1c20    # one request, in full
   sent to and from the model**, so the table holds what people asked and
   what they were answered, next to their session ids. Treat it like the
   `conversations` table.
-- Rows older than `TRACE_RETENTION_DAYS` (30) are deleted.
+- Rows older than `TRACE_RETENTION_DAYS` (30) are deleted. This is checked
+  when spans are stored, at most hourly, so it only happens while requests
+  keep arriving.
 - `/health` is not traced.
 - Every trace starts in this service: a `traceparent` header sent by a
   caller is ignored.
