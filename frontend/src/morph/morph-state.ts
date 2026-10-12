@@ -1,4 +1,4 @@
-import type { ToolCall } from "./resolve";
+import type { ToolCall } from "../resolve";
 
 // Ported from apps/ssr-agent/app/morph-state.ts -- pure client state, no
 // Next.js/RSC coupling, so this is unchanged apart from dropping

@@ -3,15 +3,14 @@ import { createSessionId } from './session.ts'
 import { resolve as askAgent } from './resolve.ts'
 import type { ResolveFn, ResolveResponse, ToolCall } from './resolve.ts'
 import { AgentConsole } from './agent-console.tsx'
-import { WidgetMorph } from './widget-morph.tsx'
+import { WidgetMorph } from './morph/widget-morph.tsx'
 import { WeatherWidget } from './widgets/weather-widget.tsx'
 import { CalendarWidget } from './widgets/calendar-widget.tsx'
 import { TodoWidget } from './widgets/todo-widget.tsx'
 import { addTodos } from './todo-store.ts'
 import { TOOLS } from './tools.ts'
 
-// Ported tray/morph UI (see widget-morph.tsx, morph-state.ts,
-// agent-console.tsx) around this app's own plain client widgets -- the
+// Ported tray/morph UI (see morph/, agent-console.tsx) around this app's own plain client widgets -- the
 // client-rendered sibling of ssr-agent's SSR/RSC version of the same
 // pattern.
 const MAX_VISIBLE_TURNS = 7

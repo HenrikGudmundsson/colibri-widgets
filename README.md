@@ -21,7 +21,7 @@ Widgets can be pinned, so one stays open while you open the next.
   the box flies between them along a curved path while its real width,
   height and corner radius animate, so nothing is distorted by scaling.
   It follows its target if the layout shifts mid-flight, and it can be
-  interrupted. See `frontend/src/widget-morph.tsx`.
+  interrupted. See `frontend/src/morph/`, starting from `flip-widget.ts`.
 - **The agent** is a Python service built on pydantic-ai. Each widget is
   declared to the model as a *capability*: a tool with a typed argument
   schema. The model never produces UI. It returns the name of a capability
