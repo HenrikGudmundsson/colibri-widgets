@@ -25,8 +25,8 @@ export const TOOLS: {
     label: "Weather",
     icon: Sun,
     color: "text-amber-500",
-    example: "weather in Oslo",
-    exampleArgs: { location: "Oslo" },
+    example: "weather in Copenhagen",
+    exampleArgs: { location: "Copenhagen" },
   },
   {
     tool: "showCalendar",
