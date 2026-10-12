@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from agent_backend import tracing
 from agent_backend.config import DATABASE_URL
 
 _engine: Optional[AsyncEngine] = None
@@ -45,6 +46,7 @@ async def init_db_pool() -> None:
     """Create the async engine and session factory. Call once, at app startup."""
     global _engine, _session_factory
     _engine = create_async_engine(async_database_url(), pool_size=10)
+    tracing.instrument_engine(_engine)
     _session_factory = async_sessionmaker(_engine, expire_on_commit=False)
 
 

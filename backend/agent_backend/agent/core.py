@@ -1,5 +1,10 @@
 from pydantic_ai import Agent
 
+# Not used by name. Agent() loads the module for its model, and with it the
+# Anthropic SDK, the first time one is built; importing it here moves that
+# (about a second in a fresh container) from the first question to startup.
+import pydantic_ai.models.anthropic  # noqa: F401
+
 from agent_backend import config
 from agent_backend.agent.deps import AgentDeps
 from agent_backend.capabilities.registry import CAPABILITIES

@@ -23,3 +23,7 @@ MAX_REPLY_TOKENS = _int("MAX_REPLY_TOKENS", 300)
 MAX_MODEL_REQUESTS = _int("MAX_MODEL_REQUESTS", 2)
 # How many earlier exchanges are sent along with a new question.
 HISTORY_TURNS = _int("HISTORY_TURNS", 6)
+
+# --- Tracing ---------------------------------------------------------------
+# How long the `spans` table keeps what each request did. See tracing.py.
+TRACE_RETENTION_DAYS = _int("TRACE_RETENTION_DAYS", 30)

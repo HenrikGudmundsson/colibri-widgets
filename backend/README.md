@@ -59,6 +59,36 @@ and whose `limited` field names the reason; the model is then not called.
 A spend limit on the API key's workspace in the Anthropic Console is the
 hard guarantee underneath all of this.
 
+## Tracing
+
+What each request did, and how long each part took, is recorded in the
+`spans` table (`agent_backend/tracing.py`). None of it is written by hand:
+FastAPI, SQLAlchemy and pydantic-ai emit OpenTelemetry spans for the
+request, each query, the agent run and each model call, with durations and
+any exception, and an exporter stores them in Postgres instead of sending
+them to a tracing service. The spans of one request share a `trace_id`.
+
+```
+uv run python -m agent_backend.trace_report             # latest requests
+uv run python -m agent_backend.trace_report --errors    # only failed ones
+uv run python -m agent_backend.trace_report --slow 3000 # 3 seconds or more
+uv run python -m agent_backend.trace_report 3f9a1c20    # one request, in full
+```
+
+- **The spans of the agent run and of each model call include the messages
+  sent to and from the model**, so the table holds what people asked and
+  what they were answered, next to their session ids. Treat it like the
+  `conversations` table.
+- Rows older than `TRACE_RETENTION_DAYS` (30) are deleted.
+- `/health` is not traced.
+- Every trace starts in this service: a `traceparent` header sent by a
+  caller is ignored.
+- A request never waits for its spans to be stored. That happens a few
+  seconds later on a thread of its own, and is given up on after 5 seconds.
+- Spans that cannot be stored, typically because the database is down, are
+  written to the log instead. So is anything that goes wrong outside a
+  request, such as the service failing to start.
+
 ## Local dev
 
 1. `docker compose -f docker-compose.dev.yml up -d` -- Postgres only.
@@ -66,6 +96,8 @@ hard guarantee underneath all of this.
 3. `uv sync`
 4. `uv run alembic upgrade head`
 5. `uv run uvicorn agent_backend.main:app --reload --port 8000`
+
+`uv run pytest` runs the tests. They need neither Postgres nor an API key.
 
 ## Adding a capability
 

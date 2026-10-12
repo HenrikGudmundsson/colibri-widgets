@@ -6,7 +6,7 @@ from pydantic_ai.exceptions import UnexpectedModelBehavior
 from pydantic_ai.usage import RunUsage, UsageLimits
 from pydantic_core import to_jsonable_python
 
-from agent_backend import config
+from agent_backend import config, tracing
 from agent_backend.agent.core import build_agent
 from agent_backend.agent.deps import AgentDeps
 from agent_backend.agent.history import last_turns
@@ -24,6 +24,29 @@ async def resolve(
     repo=Depends(get_conversation_repository),
     guard=Depends(get_guard),
 ):
+    # On the request's trace (see tracing.py): whose question it was and
+    # how it ended. The first before answering, so that it is there if
+    # answering raises. A failed run is not marked here; the span of the
+    # run itself carries the exception.
+    tracing.annotate({"session.id": request.session_id})
+    response = await answer(request, http_request, repo, guard)
+    tracing.annotate(
+        {
+            "resolve.outcome": (
+                f"refused:{response.limited}"
+                if response.limited
+                else f"tool:{response.tool}"
+                if response.tool
+                else "reply"
+            )
+        }
+    )
+    return response
+
+
+async def answer(
+    request: ResolveRequest, http_request: Request, repo, guard
+) -> ResolveResponse:
     if len(request.query) > config.MAX_QUERY_CHARS:
         return ResolveResponse(
             reply=(

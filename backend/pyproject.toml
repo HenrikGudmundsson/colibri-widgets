@@ -12,6 +12,9 @@ dependencies = [
   "asyncpg>=0.31.0",
   "python-dotenv>=1.2.1",
   "httpx>=0.28.0",
+  "opentelemetry-sdk>=1.45.1",
+  "opentelemetry-instrumentation-fastapi>=0.66b1",
+  "opentelemetry-instrumentation-sqlalchemy>=0.66b1",
 ]
 
 [dependency-groups]
