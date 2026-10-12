@@ -11,7 +11,7 @@ const FRESH_MS = 2500
 let nextId = 0
 const make = (text: string): Todo => ({ id: nextId++, text, done: false, fresh: false })
 
-let todos: readonly Todo[] = [make('Book flights to Oslo'), make('Reply to Sara')]
+let todos: readonly Todo[] = [make('Book flights to Oslo'), make('Call mum')]
 const listeners = new Set<() => void>()
 
 function set(next: readonly Todo[]) {
