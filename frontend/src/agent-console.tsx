@@ -6,7 +6,7 @@ import {
   markClicked,
   setPendingIconRect,
   subscribeDisplayedTool,
-} from "./morph-state";
+} from "./morph/morph-state";
 
 // Ported from apps/ssr-agent/app/agent-console.tsx. The tray UI, disable
 // choreography, and useSyncExternalStore wiring are unchanged -- only
@@ -172,7 +172,7 @@ export function AgentConsole({
           // Moved with `translate` instead of reordering the DOM, so the
           // move can animate. A hidden icon waits out its own fade first,
           // so it is never seen sliding away; the others wait for
-          // the departing icon's pop (POP_MS in widget-morph.tsx) to finish,
+          // the departing icon's pop (POP_MS in morph/timing.ts) to finish,
           // so they don't slide in underneath it.
           const offset = (packed.indexOf(t.tool) - domIndex) * TRAY_STEP;
           const isBusy =

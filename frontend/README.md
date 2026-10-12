@@ -12,7 +12,8 @@ variables are needed.
 
 Where to look:
 
-- `src/widget-morph.tsx` -- the icon-to-widget animation.
+- `src/morph/` -- the icon-to-widget animation: `widget-morph.tsx` is the
+  component, `flip-widget.ts` the animation itself.
 - `src/App.tsx` -- open widgets, pinning, and the sliding layout.
 - `src/agent-console.tsx` -- the input and the tool tray.
 - `src/widgets/` -- the widgets themselves (weather, calendar, to-do).
