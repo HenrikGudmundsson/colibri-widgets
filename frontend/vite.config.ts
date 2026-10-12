@@ -18,7 +18,7 @@ export default defineConfig({
     },
   },
   server: {
-    // Fixed, not auto-incrementing -- apps/portfolio's morphing-tool-dock
+    // Fixed, not auto-incrementing -- apps/portfolio's colibri-widgets
     // demo iframe hardcodes this port for local dev.
     port: 5174,
     strictPort: true,

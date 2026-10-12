@@ -1,4 +1,4 @@
-# Morphing tool dock
+# Colibri widgets
 
 A chat interface for an agent where the tools are things you can see and
 touch. Each tool sits as an icon in a tray under the input. When a tool
